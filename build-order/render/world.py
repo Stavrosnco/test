@@ -123,3 +123,38 @@ def draw_building(d, kind, x, y, team, progress=1.0):
             d.line([x - 4, fy, x + w + 4, fy], fill=(176, 150, 60))
     if kind == "mill":
         d.ellipse([x + w - 12, y + roof_h - 2, x + w - 2, y + roof_h + 8], fill=(170, 130, 80), outline=K)
+
+
+def sand_layer(w, h, seed=4):
+    rng = np.random.default_rng(seed)
+    base = np.array([[214, 170, 100], [202, 158, 90], [224, 182, 114], [190, 146, 82]], np.uint8)
+    clump = rng.integers(0, 3, (h // 2 + 1, w // 2 + 1))
+    clump = np.repeat(np.repeat(clump, 2, 0), 2, 1)[:h, :w]
+    yy, xx = np.mgrid[0:h, 0:w]
+    ripple = np.sin(xx / 7.0 + np.sin(yy / 13.0) * 2.0 + yy / 3.0)
+    idx = np.where(ripple > 0.92, 3, clump)
+    return base[idx]
+
+
+def rock_plateau(img, cx, cy, rx, ry, seed=1):
+    rng = np.random.default_rng(seed)
+    h, w, _ = img.shape
+    yy, xx = np.mgrid[0:h, 0:w]
+    ang = np.arctan2(yy - cy, xx - cx)
+    wob = 1 + 0.12 * np.sin(ang * 5 + seed) + 0.06 * np.sin(ang * 11)
+    r = np.hypot((xx - cx) / rx, (yy - cy) / ry)
+    edge = (r < wob) & (r > wob - 0.08)
+    inner = r < wob - 0.08
+    img[inner] = np.where(rng.random((inner.sum(), 1)) > 0.5, (122, 92, 64), (132, 100, 70))
+    img[edge] = (84, 60, 40)
+    return img
+
+
+def spice_field(img, cx, cy, rx, ry, seed=2):
+    rng = np.random.default_rng(seed)
+    h, w, _ = img.shape
+    yy, xx = np.mgrid[0:h, 0:w]
+    r = np.hypot((xx - cx) / rx, (yy - cy) / ry) + rng.random((h, w)) * 0.35
+    m = r < 1.0
+    img[m] = np.where(rng.random((m.sum(), 1)) > 0.45, (220, 116, 40), (190, 92, 30))
+    return img

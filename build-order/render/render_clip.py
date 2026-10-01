@@ -18,10 +18,8 @@ ap.add_argument("--out", required=True)
 ap.add_argument("--still", type=float, help="render one PNG at this song time instead")
 a = ap.parse_args()
 
-clock = Clock()
-if a.scene == "chant":
-    from scene_chant import ChantScene as Scene
-scene = Scene(clock, a.t0, a.t1)
+from director import Director
+scene = Director()
 mask = fx.crt_mask(hud.H, hud.W)
 
 if a.still is not None:
