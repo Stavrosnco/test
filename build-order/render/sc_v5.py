@@ -152,6 +152,9 @@ class Verse5(engine.MapScene):
             draw_text(frame, 238, hud.TOP + 26 + i * 15, f"{i + 1}. {name}", col, shadow=None)
 
     def stadium(self, frame, t):
+        pl = engine.plate("stadium")
+        if pl is not None:
+            return self.stadium_plate(frame, t, pl)
         d = ImageDraw.Draw(frame)
         top = hud.TOP
         d.rectangle([0, top, hud.W, hud.BOT], fill=(10, 8, 20))
@@ -175,6 +178,36 @@ class Verse5(engine.MapScene):
             if (x * 7 + int(t * 8)) % 97 == 0:
                 d.point((x + 1, y + top - 2 - bob), fill=(255, 255, 255))
         engine.big_text(frame, "SEOUL STADIUM", t - self.t_seoul, scale=2, y=top + 128, col=(255, 255, 255))
+
+    def stadium_plate(self, frame, t, pl):
+        import json
+        box = json.loads((engine.ROOT / "art/plates/stadium.json").read_text())["screen"]
+        k = ease((t - self.t_seoul) / max(0.1, self.t_apm - self.t_seoul))
+        ox, oy = int(round(lerp(0, 38, k))), 8
+        vh = hud.BOT - hud.TOP
+        v = pl.crop((ox, oy, ox + hud.W, oy + vh)).copy()
+        # live game on the big screen
+        src_t = self.t_ling + 0.8 + (t - self.t_seoul) * 0.8
+        game, _ = self.frame(src_t, lyric_t=t)
+        self.footage = False
+        bx0, by0, bx1, by1 = box[0] - ox, box[1] - oy, box[2] - ox, box[3] - oy
+        if bx1 - bx0 > 4 and by1 - by0 > 4:
+            g = game.crop((0, hud.TOP, hud.W, hud.BOT)).resize((bx1 - bx0 + 1, by1 - by0 + 1), Image.NEAREST)
+            a = np.asarray(g).astype(np.float32) * 0.85 + np.array([10, 14, 30])
+            v.paste(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)), (bx0, by0))
+            draw_text(v, bx0 + 3, by0 + 3, "LIVE", (255, 60, 60), shadow=None)
+        # lights pulse on downbeats, light sticks flicker on beats
+        a = np.asarray(v).astype(np.float32) * (1.0 + 0.18 * self.c.downpulse(t, 6))
+        v = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+        d = ImageDraw.Draw(v)
+        pulse = self.c.pulse(t)
+        for x, y, c in self.crowd:
+            sy = 96 + (y - 70) * 0.6
+            if (x + int(t * 4)) % 5 == 0 or (pulse > 0.6 and (x + y) % 3 == 0):
+                col = (120, 170, 255) if x < 200 else (255, 110, 100)
+                d.line([x, sy, x + 1, sy - 3], fill=col)
+        frame.paste(v, (0, hud.TOP))
+        engine.big_text(frame, "SEOUL STADIUM", t - self.t_seoul, scale=2, y=hud.TOP + 140, col=(255, 255, 255))
 
     def apm(self, frame, t):
         d = ImageDraw.Draw(frame)

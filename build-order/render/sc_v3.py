@@ -29,7 +29,7 @@ class Verse3(engine.MapScene):
         self.t_ready, self.t_lost = w(9, "Unit"), tl.line(sec, 9)["words"][2]["s"]
         self.t_ra, self.t_tesla = w(10, "Red"), w(10, "Tesla")
         rng = np.random.default_rng(31)
-        self.noise = [rng.integers(0, 255, (120, 200), dtype=np.uint8) for _ in range(6)]
+        self.noise = [rng.integers(0, 255, (134, 224), dtype=np.uint8) for _ in range(6)]
 
     def build_ground(self):
         rng = np.random.default_rng(8)
@@ -137,38 +137,43 @@ class Verse3(engine.MapScene):
     def fmv(self, frame, t, who):
         """Grainy 'live action' transmission window over the viewport."""
         d = ImageDraw.Draw(frame)
-        x0, y0, w, h = 92, hud.TOP + 14, 200, 120
+        pl = engine.plate("fmv_general" if who == "general" else "fmv_bald")
+        w, h = (224, 134) if pl else (200, 120)
+        x0, y0 = (hud.W - w) // 2, hud.TOP + 14
         d.rectangle([x0 - 4, y0 - 12, x0 + w + 3, y0 + h + 3], fill=(20, 22, 20), outline=(90, 200, 90))
         draw_text(frame, x0, y0 - 10, "INCOMING TRANSMISSION", (120, 230, 120), shadow=None)
+        if pl:
+            st = self.L[1] if who == "general" else self.t_bald
+            en = self.t_bald if who == "general" else self.t_tib
+            k = ease((t - st) / max(0.1, en - st))
+            ox = 11 + int(round(3 * math.sin(t * 0.7)))
+            oy = int(round(lerp(14, 2, k)))
+            v = pl.crop((ox, oy, ox + w, oy + h))
+        else:
+            v = self._fmv_drawn(t, who, w, h)
+        a = np.asarray(v).astype(np.int16)
+        n = np.resize(self.noise[int(t * 24) % 6], (h, w)).astype(np.int16)
+        a = a + ((n[..., None] - 128) * (0.09 if pl else 0.18)).astype(np.int16)
+        a[::2] = a[::2] * 0.8
+        j = int(t * 24) % 5
+        a[j * 20:j * 20 + 3] = np.roll(a[j * 20:j * 20 + 3], 6, axis=1)
+        if int(t * 24) % 37 < 2:  # occasional tape tracking roll
+            ry = int(t * 300) % h
+            a[ry:ry + 4] = np.clip(a[ry:ry + 4] + 70, 0, 255)
+        frame.paste(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)), (x0, y0))
+
+    def _fmv_drawn(self, t, who, w, h):
         v = Image.new("RGB", (w, h), (30, 40, 34))
         vd = ImageDraw.Draw(v)
         if who == "general":
             vd.rectangle([0, 0, w, h], fill=(50, 62, 52))
-            for i in range(4):
-                vd.rectangle([10 + i * 48, 10, 46 + i * 48, 40], fill=(30, 70, 40), outline=(90, 160, 90))
             vd.ellipse([70, 30, 130, 96], fill=(220, 176, 140), outline=engine.K)
-            vd.chord([66, 22, 134, 70], 180, 360, fill=(60, 80, 50), outline=engine.K)
-            vd.rectangle([60, 18, 140, 30], fill=(60, 80, 50))
             vd.polygon([(40, 120), (60, 92), (140, 92), (160, 120)], fill=(70, 90, 60), outline=engine.K)
-            vd.rectangle([92, 100, 108, 106], fill=(230, 190, 60))
         else:
             vd.rectangle([0, 0, w, h], fill=(26, 10, 12))
-            vd.ellipse([20, 10, 180, 130], fill=(80, 16, 20))
             vd.ellipse([72, 22, 128, 92], fill=(210, 160, 130), outline=engine.K)
-            vd.arc([70, 20, 130, 60], 200, 340, fill=(255, 210, 180))
-            vd.rectangle([84, 52, 92, 55], fill=engine.K); vd.rectangle([108, 52, 116, 55], fill=engine.K)
-            vd.polygon([(88, 74), (112, 74), (108, 90), (92, 90)], fill=(40, 26, 24))
-            m = int(engine.mouth_amt(self.c, t, True) * 4)
-            vd.rectangle([94, 76, 106, 78 + m], fill=(90, 30, 30))
             vd.polygon([(30, 120), (64, 94), (136, 94), (170, 120)], fill=(20, 18, 22), outline=engine.K)
-            vd.line([64, 94, 100, 120], fill=(160, 30, 30)); vd.line([136, 94, 100, 120], fill=(160, 30, 30))
-        a = np.asarray(v).astype(np.int16)
-        n = self.noise[int(t * 24) % 6].astype(np.int16)
-        a = a + ((n[..., None] - 128) * 0.18).astype(np.int16)
-        a[::2] = a[::2] * 0.8
-        j = int(t * 24) % 5
-        a[j * 20:j * 20 + 3] = np.roll(a[j * 20:j * 20 + 3], 6, axis=1)
-        frame.paste(Image.fromarray(np.clip(a, 0, 255).astype(np.uint8)), (x0, y0))
+        return v
 
     def overlay(self, frame, t, cam):
         if self.footage:
@@ -179,7 +184,7 @@ class Verse3(engine.MapScene):
         if L[1] <= t < self.t_tib:
             self.fmv(frame, t, "general" if t < self.t_bald else "bald")
             if self.t_hammer <= t < self.t_hammer + 0.6:
-                engine.big_text(frame, "LIVE ACTION!", t - self.t_hammer, scale=3, y=hud.TOP + 80)
+                engine.big_text(frame, "LIVE ACTION!", t - self.t_hammer, scale=2, y=hud.TOP + 136)
         if self.t_peace <= t < L[4]:
             engine.big_text(frame, "PEACE THROUGH|POWER!", t - self.t_peace, scale=3, y=hud.TOP + 60, col=(240, 60, 50))
         if self.t_ion <= t < self.t_ion + 1.2:

@@ -357,3 +357,14 @@ def eva_portrait(t, singing, clock):
         m = int(mouth_amt(clock, t, singing) * 4)
         d.line([x + 12, y + 24, x + 18, y + 24 + m // 2], fill=g)
     return draw
+
+
+_PLATES = {}
+
+
+def plate(name):
+    """Processed backdrop from art/plates (None if it hasn't been generated)."""
+    if name not in _PLATES:
+        p = ROOT / "art/plates" / f"{name}.png"
+        _PLATES[name] = Image.open(p).convert("RGB") if p.exists() else None
+    return _PLATES[name]
