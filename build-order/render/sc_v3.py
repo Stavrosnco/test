@@ -61,8 +61,7 @@ class Verse3(engine.MapScene):
         units.concrete_building(d, 20, 112, 30, 26, GOLD, "power", light=True)
         units.concrete_building(d, 540, 64, 44, 32, RED, "yard")
         units.concrete_building(d, 590, 108, 30, 26, RED, "power", light=t < self.t_tesla)
-        cap = t >= self.t_mine
-        units.concrete_building(d, 480, 100, 40, 30, GOLD if cap else RED, "refinery")
+        units.concrete_building(d, 480, 100, 40, 30, RED, "refinery")
         items = []
         for i, (x, y) in enumerate(CRYST):
             items.append((y, lambda x=x, y=y, i=i: units.crystals(d, x, y, glow=(glow if i % 2 else 1 - glow) * (1.5 if self.L[2] <= t < self.L[3] else 1))))
@@ -95,7 +94,7 @@ class Verse3(engine.MapScene):
         # engineer sneaking
         if self.t_eng - 0.2 <= t < self.t_mine:
             ek = ease((t - self.t_eng) / (self.t_mine - self.t_eng))
-            ex, ey = lerp(360, 496, ek), lerp(150, 132, ek)
+            ex, ey = lerp(360, 490, ek), lerp(150, 176, ek)
             items.append((ey, lambda: units.infantry(d, ex, ey, team=GOLD, step=int(b * 4) % 2, hat=(246, 206, 62))))
         # unit ready / unit lost
         if self.t_ready <= t < self.t_lost:
@@ -132,7 +131,7 @@ class Verse3(engine.MapScene):
         return (cash, "OK" if t < self.t_tesla else "LOW", "12")
 
     def minimap_dots(self, t):
-        return [(40, 85, (246, 206, 62), True), (560, 80, (240, 80, 60), True), (500, 115, (246, 206, 62) if t >= self.t_mine else (240, 80, 60), True)]
+        return [(40, 85, (246, 206, 62), True), (560, 80, (240, 80, 60), True), (500, 150, (246, 206, 62) if t >= self.t_mine else (240, 80, 60), True)]
 
     def fmv(self, frame, t, who):
         """Grainy 'live action' transmission window over the viewport."""

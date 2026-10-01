@@ -35,8 +35,8 @@ class Planet:
 
 
 BP_SHAPES = [("rect", 40, 120, 100, 160, "HQ"), ("rect", 120, 70, 150, 92, ""), ("rect", 160, 70, 190, 92, ""),
-             ("rect", 120, 120, 170, 156, "BARRACKS"), ("poly", 30, 40, 70, 80, "MINE"), ("path", 100, 140, 300, 140, ""),
-             ("rect", 200, 110, 216, 150, ""), ("arrow", 230, 140, 340, 100, "ATTACK"), ("x", 350, 90, 0, 0, "")]
+             ("rect", 114, 120, 176, 156, "BARRACKS"), ("poly", 24, 40, 80, 84, "MINE"), ("path", 100, 150, 300, 150, ""),
+             ("rect", 200, 110, 216, 150, ""), ("arrow", 230, 150, 340, 100, "ATTACK"), ("x", 350, 90, 0, 0, "")]
 
 
 class Intro:
@@ -77,6 +77,8 @@ class Intro:
                     d.line(seg, fill=WHITE)
             elif kind == "poly":
                 d.arc([a, b, c, e], 180, 180 + int(180 * p), fill=WHITE)
+                if p >= 1:
+                    d.line([a, (b + e) // 2, c, (b + e) // 2], fill=WHITE)
             elif kind == "path":
                 for x in range(a, int(a + (c - a) * p), 6):
                     d.line([x, b, x + 3, b], fill=WHITE)
@@ -89,12 +91,19 @@ class Intro:
                 d.line([a - 6, b - 6, a + 6, b + 6], fill=(255, 120, 120), width=2)
                 d.line([a - 6, b + 6, a + 6, b - 6], fill=(255, 120, 120), width=2)
             if label and p >= 1:
-                draw_text(img, a + 2, b + 3 if kind != "arrow" else b - 12, label, WHITE, shadow=None)
+                tw = text_width(label)
+                if kind == "rect":
+                    lx, ly = (a + c) // 2 - tw // 2, (b + e) // 2 - 3
+                elif kind == "poly":
+                    lx, ly = (a + c) // 2 - tw // 2, (b + e) // 2 - 10
+                else:
+                    lx, ly = c - tw - 16, e - 9
+                draw_text(img, lx, ly, label, WHITE, shadow=None)
         draw_text(img, 8, 6, "BASE PLAN  REV.1", WHITE, shadow=None)
         if k > 0.15:
-            d.rectangle([300, 176, 376, 206], outline=(255, 120, 120), width=2)
-            draw_text(img, 306, 181, "LAS VEGAS", (255, 120, 120), shadow=None)
-            draw_text(img, 318, 193, "1992", (255, 120, 120), shadow=None)
+            d.rectangle([300, 6, 376, 36], outline=(255, 120, 120), width=2)
+            draw_text(img, 312, 11, "LAS VEGAS", (255, 120, 120), shadow=None)
+            draw_text(img, 326, 23, "1992", (255, 120, 120), shadow=None)
         return img
 
     def verbs_panel(self, t):

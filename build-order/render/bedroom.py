@@ -49,23 +49,27 @@ class Bedroom:
         for i, y in enumerate(range(172, H, 7)):
             for x in range((i * 23) % 40, W, 40):
                 d.line([x, y, x, y + 6], fill=(96, 62, 38))
-        # window
+        # window: sky, sun/moon and hills drawn in their own layer, clipped to the glass
         top, bot = sky(dawn, t)
-        for y in range(28, 104):
-            u = (y - 28) / 76
-            d.line([24, y, 112, y], fill=tuple(int(a + (b - a) * u) for a, b in zip(top, bot)))
+        wx0, wy0, wx1, wy1 = 24, 28, 112, 104
+        win = Image.new("RGB", (wx1 - wx0, wy1 - wy0))
+        wd = ImageDraw.Draw(win)
+        for y in range(wy1 - wy0):
+            u = y / (wy1 - wy0)
+            wd.line([0, y, wx1 - wx0, y], fill=tuple(int(a + (b - a) * u) for a, b in zip(top, bot)))
         if dawn < 0.5:
             rng = np.random.default_rng(3)
             for _ in range(18):
-                x, y = int(rng.integers(26, 110)), int(rng.integers(30, 80))
+                x, y = int(rng.integers(2, 86)), int(rng.integers(2, 52))
                 if (int(t * 3) + x) % 7:
-                    d.point((x, y), fill=(230, 230, 255))
-            d.ellipse([84, 36, 96, 48], fill=(240, 236, 200))
-            d.ellipse([88, 34, 100, 46], fill=top)
+                    wd.point((x, y), fill=(230, 230, 255))
+            wd.ellipse([60, 8, 72, 20], fill=(240, 236, 200))
+            wd.ellipse([64, 6, 76, 18], fill=top)
         else:
-            sy_ = int(110 - 70 * (dawn - 0.5) * 2)
-            d.ellipse([50, sy_, 70, sy_ + 20], fill=(255, 230, 140))
-        d.polygon([(24, 104), (40, 90), (60, 98), (80, 86), (112, 100), (112, 104)], fill=(30, 30, 50))
+            sy_ = int(82 - 70 * (dawn - 0.5) * 2)
+            wd.ellipse([26, sy_, 46, sy_ + 20], fill=(255, 230, 140))
+        wd.polygon([(0, 76), (16, 62), (36, 70), (56, 58), (88, 72), (88, 76)], fill=(30, 30, 50))
+        img.paste(win, (wx0, wy0))
         d.rectangle([22, 26, 114, 106], outline=(230, 224, 210), width=2)
         d.line([68, 26, 68, 106], fill=(230, 224, 210), width=2)
         d.line([22, 66, 114, 66], fill=(230, 224, 210), width=2)
