@@ -79,5 +79,5 @@ class Chorus:
                 img = bedroom.push(room, self.game(self.ctx.scenes['chant'].t1 - 0.5, lyric_t=t), 3.2)
             elif t < self.t_mouse + 0.9:
                 img = bedroom.zoom(room, 268, 140, 3.0)
-        engine.kinetic(img, self.tl, t, self.sec, scale=3, y=48, sub=True)
+        engine.kinetic(img, self.tl, t, self.sec, scale=3, y=22, sub=True)
         return img, 0.1 * self.c.downpulse(t, 10)

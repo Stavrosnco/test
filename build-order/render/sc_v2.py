@@ -174,6 +174,8 @@ class Verse2(engine.MapScene):
                [(*self.orc_pos(i, t)[:2], (240, 80, 60), False) for i in range(6)]
 
     def overlay(self, frame, t, cam):
+        if self.footage:
+            return
         cx, cy = cam
         sp = lambda x, y: (x - cx, y - cy + hud.TOP)
         if self.t_95 <= t < self.t_95 + 1.4 and not self.footage:

@@ -215,6 +215,7 @@ class MapScene:
     def resources(self, t): return (0, 0, "0/0")
     def portrait(self, t, singing): return portrait(mouth=mouth_amt(self.c, t, singing))
     cur_speaker = ""
+    def speaker_for(self, line): return self.speaker
     def minimap_dots(self, t): return []
     def postfx(self, frame, t): return 0.0
 
@@ -264,7 +265,7 @@ class MapScene:
         cam = (int(cx * s), int(cy * s), int((cx + hud.W) * s), int((cy + hud.BOT - hud.TOP) * s))
         line, shown = self.tl.line_at(lt)
         singing = bool(line) and lt <= line["end"]
-        spk = self.speaker
+        spk = self.speaker_for(line) if line else self.speaker
         if line and line["speaker"] and "Robotic" in line["speaker"]:
             spk = "EVA"
         self.cur_speaker = spk
