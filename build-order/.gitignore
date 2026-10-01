@@ -1,2 +1,4 @@
 audio/*.wav
 analysis/demucs/
+out/
+__pycache__/
